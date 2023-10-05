@@ -51,6 +51,16 @@ async def set_key_value_POST(request):
     await server.set(key, value)
     return web.Response(text="Key-Value set successfully")
 
+async def get_neighbors(request):
+    """
+    Handle retrieving all neighbors
+    """
+    try:
+        value = server.bootstrappable_neighbors()
+        return web.Response(text=str([t[0] for t in value]))
+    except Exception as e:
+        return web.Response(text=str(e), status=500)
+
 async def get_key_value(request):
     """
     Handle retrieving a value from HTTP based on a key.
@@ -68,6 +78,7 @@ async def start_http_server():
     app = web.Application()
     app.add_routes([web.get('/set', set_key_value)])
     app.add_routes([web.get('/get', get_key_value)])
+    app.add_routes([web.get('/neighbors', get_neighbors)])
     runner = web.AppRunner(app)
     await runner.setup()
     site = web.TCPSite(runner, '127.0.0.1', 8083)
