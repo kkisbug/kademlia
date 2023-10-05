@@ -44,7 +44,7 @@ class IStorage(ABC):
 
 
 class ForgetfulStorage(IStorage):
-    def __init__(self, ttl=86400):
+    def __init__(self, ttl=1800):
         """
         By default, max age is a week.
         """
