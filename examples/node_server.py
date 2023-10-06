@@ -21,7 +21,7 @@ def parse_arguments():
     # Optional arguments
     parser.add_argument("-i", "--ip", help="IP address of existing node", type=str, default=None)
     parser.add_argument("-p", "--port", help="port number of existing node", type=int, default=None)
-    parser.add_argument("-l", "--listen", help="listen port of this node,default=17168(first node)/17169(second node)", type=int, default=17168)
+    parser.add_argument("-l", "--listen", help="listen port of this node,default=17168", type=int, default=17168)
 
     return parser.parse_args()
 
@@ -88,7 +88,7 @@ def connect_to_bootstrap_node(args):
     loop = asyncio.get_event_loop()
     loop.set_debug(True)
 
-    loop.run_until_complete(server.listen(int(args.listen)+1))
+    loop.run_until_complete(server.listen(int(args.listen)))
     bootstrap_node = (args.ip, int(args.port))
     loop.run_until_complete(server.bootstrap([bootstrap_node]))
 
