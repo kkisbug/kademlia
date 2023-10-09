@@ -111,8 +111,8 @@ class Server:
         # do our crawling
         await asyncio.gather(*results)
         
-        await self.save_neighbors_to_data()
-        return # because of save_neighbors_to_data ,no need to do script belo.by kk
+        # await self.save_neighbors_to_data()
+        # return # because of save_neighbors_to_data ,no need to do script belo.by kk
         
         # now republish keys older than one hour
         for dkey, value in self.storage.iter_older_than(3600):
