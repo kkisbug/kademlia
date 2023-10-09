@@ -76,7 +76,12 @@ class Server:
         self.refresh_table()
 
     def get_self_external_ip(self): # by kk
-        return requests.get("https://httpbin.org/ip").json()['origin']
+        response = requests.get("https://httpbin.org/ip")
+        if response.status_code == 200:
+            return response.json()["origin"]
+        else:
+            log.error("get_self_external_ip Failed")
+            return "FAIL"
         
     def save_neighbors_to_data(self): # by kk
         value = self.bootstrappable_neighbors()
