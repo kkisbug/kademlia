@@ -85,8 +85,9 @@ class Server:
         
     def save_neighbors_to_data(self): # by kk
         value = self.bootstrappable_neighbors()
-        log.debug("save neighbors %s:%s to data"%(self.external_ip,str([t[0] for t in value])))
-        self.set(self.external_ip,str([t[0] for t in value]))
+        if len(value)!=0:
+            log.debug("save neighbors %s:%s to data"%(self.external_ip,str([t[0] for t in value])))
+            self.set(self.external_ip,str([t[0] for t in value]))
         
     def refresh_table(self, interval=3600):
         log.debug("Refreshing routing table")
