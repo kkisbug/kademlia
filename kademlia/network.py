@@ -5,6 +5,7 @@ import random
 import pickle
 import asyncio
 import logging
+import requests
 
 from kademlia.protocol import KademliaProtocol
 from kademlia.utils import digest
@@ -44,6 +45,7 @@ class Server:
         self.protocol = None
         self.refresh_loop = None
         self.save_state_loop = None
+        self.external_ip = self.get_self_external_ip()
 
     def stop(self):
         if self.transport is not None:
@@ -73,6 +75,14 @@ class Server:
         # finally, schedule refreshing table
         self.refresh_table()
 
+    def get_self_external_ip(self): # by kk
+        return requests.get("https://httpbin.org/ip").json()['origin']
+        
+    def save_neighbors_to_data(self): # by kk
+        value = self.bootstrappable_neighbors()
+        log.debug("save neighbors %s:%s to data"%(self.external_ip,str([t[0] for t in value])))
+        self.set(self.external_ip,str([t[0] for t in value]))
+        
     def refresh_table(self, interval=3600):
         log.debug("Refreshing routing table")
         asyncio.ensure_future(self._refresh_table())
@@ -94,7 +104,10 @@ class Server:
 
         # do our crawling
         await asyncio.gather(*results)
-
+        
+        self.save_neighbors_to_data()
+        return # because of save_neighbors_to_data ,no need to do script belo.by kk
+        
         # now republish keys older than one hour
         for dkey, value in self.storage.iter_older_than(3600):
             await self.set_digest(dkey, value)
