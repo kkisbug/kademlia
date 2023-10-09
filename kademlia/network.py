@@ -83,11 +83,11 @@ class Server:
             log.error("get_self_external_ip Failed")
             return "FAIL"
         
-    def save_neighbors_to_data(self): # by kk
+    async def save_neighbors_to_data(self): # by kk
         value = self.bootstrappable_neighbors()
         if len(value)!=0:
             log.debug("save neighbors %s:%s to data"%(self.external_ip,str([t[0] for t in value])))
-            self.set(self.external_ip,str([t[0] for t in value]))
+            await self.set(self.external_ip,str([t[0] for t in value]))
         
     def refresh_table(self, interval=3600):
         log.debug("Refreshing routing table")
@@ -111,7 +111,7 @@ class Server:
         # do our crawling
         await asyncio.gather(*results)
         
-        self.save_neighbors_to_data()
+        await self.save_neighbors_to_data()
         return # because of save_neighbors_to_data ,no need to do script belo.by kk
         
         # now republish keys older than one hour
