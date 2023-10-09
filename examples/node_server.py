@@ -1,6 +1,8 @@
 import argparse
 import logging
 import asyncio
+import hashlib
+from datetime import datetime
 from aiohttp import web
 
 from kademlia.network import Server
@@ -26,23 +28,32 @@ def parse_arguments():
 
     return parser.parse_args()
 
+def generate_token():
+    current_utc_time = datetime.utcnow()
+    seed_value = current_utc_time.strftime('%Y?%m?%d?%H?%M?').encode('utf-8')
+    hash_obj = hashlib.sha256(seed_value)
+    return hash_obj.hexdigest()[:24]
 
 async def set_key_value(request):
     """
     Handle setting a key-value pair via HTTP using GET request.
     """
+    token = request.rel_url.query.get('token')
     key = request.rel_url.query.get('key')
     value = request.rel_url.query.get('value')
     
-    if not key or not value:
-        return web.Response(text="Both 'key' and 'value' parameters are required.", status=400)
-    
+    if not token or not key or not value:
+        return web.Response(text="'token' and 'key' and 'value' parameters are required.", status=400)
+
+    if token!=generate_key():
+        return web.Response(text="Invalid token,request failed", status=500)
+        
     await server.set(key, value)
     return web.Response(text="Key-Value set successfully")
 
 async def set_key_value_POST(request):
     """
-    Handle setting a key-value pair via HTTP
+    Handle setting a key-value pair via HTTP, Do not need token.
     """
     data = await request.json()
     key = data.get('key')
@@ -56,6 +67,13 @@ async def get_neighbors(request):
     """
     Handle retrieving all neighbors
     """
+    token = request.rel_url.query.get('token')
+    if not token or not key:
+        return web.Response(text="A 'token' parameter is required.", status=400)
+        
+    if token!=generate_key():
+        return web.Response(text="Invalid token,request failed", status=500)
+        
     try:
         value = server.bootstrappable_neighbors()
         return web.Response(text=str([t[0] for t in value]))
@@ -66,9 +84,13 @@ async def get_key_value(request):
     """
     Handle retrieving a value from HTTP based on a key.
     """
+    token = request.rel_url.query.get('token')
     key = request.rel_url.query.get('key')
-    if not key:
-        return web.Response(text="A 'key' parameter is required.", status=400)
+    if not token or not key:
+        return web.Response(text="A 'token' and 'key' parameter is required.", status=400)
+        
+    if token!=generate_key():
+        return web.Response(text="Invalid token,request failed", status=500)
     try:
         value = await server.get(key)
         return web.Response(text=value)
@@ -82,7 +104,7 @@ async def start_http_server():
     app.add_routes([web.get('/neighbors', get_neighbors)])
     runner = web.AppRunner(app)
     await runner.setup()
-    site = web.TCPSite(runner, '127.0.0.1', 8083)
+    site = web.TCPSite(runner, '0.0.0.0', 8083)
     await site.start()
 
 def connect_to_bootstrap_node(args):
