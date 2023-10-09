@@ -12,7 +12,7 @@ log = logging.getLogger('kademlia')
 log.addHandler(handler)
 log.setLevel(logging.DEBUG)
 
-server = Server()
+server = None
 
 
 def parse_arguments():
@@ -22,6 +22,7 @@ def parse_arguments():
     parser.add_argument("-i", "--ip", help="IP address of existing node", type=str, default=None)
     parser.add_argument("-p", "--port", help="port number of existing node", type=int, default=None)
     parser.add_argument("-l", "--listen", help="listen port of this node,default=17168", type=int, default=17168)
+    parser.add_argument("-k", "--ksize", help="ksize of this kad network", type=int, default=20)
 
     return parser.parse_args()
 
@@ -85,9 +86,10 @@ async def start_http_server():
     await site.start()
 
 def connect_to_bootstrap_node(args):
+    global server
     loop = asyncio.get_event_loop()
     loop.set_debug(True)
-
+    server = Server(ksize=args.ksize)
     loop.run_until_complete(server.listen(int(args.listen)))
     bootstrap_node = (args.ip, int(args.port))
     loop.run_until_complete(server.bootstrap([bootstrap_node]))
@@ -102,9 +104,10 @@ def connect_to_bootstrap_node(args):
 
 
 def create_bootstrap_node(args):
+    global server
     loop = asyncio.get_event_loop()
     loop.set_debug(True)
-
+    server = Server(ksize=args.ksize)
     loop.run_until_complete(server.listen(int(args.listen)))
 
     try:
